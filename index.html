@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safeway Training (iOS)</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f2f2f7;
+}
+.navbar {
+  background: #fff;
+  padding: 14px;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+}
+.screen {
+  padding: 15px;
+}
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 12px;
+}
+.title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.small {
+  color: #6e6e73;
+  font-size: 14px;
+}
+.receipt {
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e5ea;
+  cursor: pointer;
+}
+.receipt:last-child {
+  border-bottom: none;
+}
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #fff;
+  display: flex;
+  border-top: 1px solid #ccc;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+}
+.active {
+  color: #d71920;
+  font-weight: 600;
+}
+button {
+  background: #d71920;
+  color: white;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 10px;
+  font-size: 16px;
+}
+.hidden { display:none; }
+</style>
+</head>
+
+<body>
+
+<div class="navbar">Safeway</div>
+
+<div class="screen" id="home">
+  <div class="card">
+    <div class="title">Welcome back</div>
+    <div class="small">Plaza Safeway – Walla Walla, WA</div>
+  </div>
+</div>
+
+<div class="screen hidden" id="receipts">
+  <div class="card">
+    <div class="title">Purchase History</div>
+
+    <div class="receipt" onclick="showDetail('instore')">
+      <strong>Safeway #0115</strong><br>
+      Jan 12, 2026 · In-Store<br>
+      <span class="small">Receipt not available</span>
+    </div>
+
+    <div class="receipt" onclick="showDetail('scanpay')">
+      <strong>Safeway #0115</strong><br>
+      Jan 10, 2026 · Scan & Pay<br>
+      <span class="small">$84.71</span>
+    </div>
+
+    <div class="receipt" onclick="showDetail('pickup')">
+      <strong>DriveUp & Go</strong><br>
+      Jan 9, 2026 · Pickup<br>
+      <span class="small">$63.19</span>
+    </div>
+
+    <div class="receipt" onclick="showDetail('fuel')">
+      <strong>Safeway Fuel</strong><br>
+      Jan 7, 2026<br>
+      <span class="small">$47.88</span>
+    </div>
+  </div>
+</div>
+
+<div class="screen hidden" id="detail">
+  <div class="card" id="detailContent"></div>
+  <button onclick="goBack()">Back to Receipts</button>
+</div>
+
+<div class="tabbar">
+  <div class="tab active" onclick="switchTab('home')">Home</div>
+  <div class="tab">For U</div>
+  <div class="tab">Wallet</div>
+  <div class="tab" onclick="switchTab('receipts')">Receipts</div>
+  <div class="tab">More</div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(tab).classList.remove('hidden');
+}
+
+function showDetail(type) {
+  switchTab('detail');
+  let content = document.getElementById('detailContent');
+
+  if (type === 'instore') {
+    content.innerHTML = `
+      <strong>No Digital Receipt</strong><br><br>
+      <span class="small">
+      This purchase was made in-store without Scan & Pay or app payment.<br><br>
+      Paper receipt only.
+      </span>`;
+  }
+
+  if (type === 'scanpay') {
+    content.innerHTML = `
+      <strong>Safeway #0115</strong><br>
+      Jan 10, 2026 · 4:22 PM<br><br>
+      Milk $3.99<br>
+      Chicken $12.88<br>
+      Produce $18.20<br><br>
+      <strong>Total $84.71</strong><br>
+      <span class="small">Paid with Safeway Wallet</span>`;
+  }
+
+  if (type === 'pickup') {
+    content.innerHTML = `
+      <strong>DriveUp & Go</strong><br>
+      Jan 9, 2026<br><br>
+      Pickup Order<br>
+      <strong>Total $63.19</strong>`;
+  }
+
+  if (type === 'fuel') {
+    content.innerHTML = `
+      <strong>Safeway Fuel</strong><br>
+      Jan 7, 2026<br><br>
+      12.4 gal @ $3.86<br>
+      <strong>Total $47.88</strong>`;
+  }
+}
+
+function goBack() {
+  switchTab('receipts');
+}
+</script>
+
+</body>
+</html>
