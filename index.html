@@ -1,184 +1,502 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Safeway Training (iOS)</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Safeway Training</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f2f2f7;
-}
-.navbar {
-  background: #fff;
-  padding: 14px;
-  font-weight: 600;
-  text-align: center;
-  border-bottom: 1px solid #ccc;
-}
-.screen {
-  padding: 15px;
-}
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 12px;
-}
-.title {
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.small {
-  color: #6e6e73;
-  font-size: 14px;
-}
-.receipt {
-  padding: 12px 0;
-  border-bottom: 1px solid #e5e5ea;
-  cursor: pointer;
-}
-.receipt:last-child {
-  border-bottom: none;
-}
-.tabbar {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #fff;
-  display: flex;
-  border-top: 1px solid #ccc;
-}
-.tab {
-  flex: 1;
-  text-align: center;
-  padding: 10px;
-  font-size: 12px;
-}
-.active {
-  color: #d71920;
-  font-weight: 600;
-}
-button {
-  background: #d71920;
-  color: white;
-  border: none;
-  padding: 12px;
-  width: 100%;
-  border-radius: 10px;
-  font-size: 16px;
-}
-.hidden { display:none; }
+  :root{
+    --bg:#f2f2f7;
+    --card:#ffffff;
+    --muted:#6e6e73;
+    --line:#e5e5ea;
+    --brand:#d71920;
+    --text:#111111;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ height:100%; margin:0; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif; background:var(--bg); color:var(--text); }
+  body{ overscroll-behavior: none; }
+
+  /* iOS-style top nav */
+  .nav{
+    position:sticky; top:0; z-index:10;
+    background:#fff;
+    padding: 14px 16px 10px 16px;
+    border-bottom:1px solid var(--line);
+    text-align:center;
+    font-weight:600;
+  }
+  .subnav{
+    position:sticky; top:53px; z-index:9;
+    background:#fff;
+    padding: 8px 16px 12px 16px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .pill{
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size:14px;
+    color: var(--muted);
+  }
+  .pill strong{ color:var(--text); font-weight:600; }
+
+  .container{
+    padding: 14px 14px calc(92px + env(safe-area-inset-bottom)) 14px; /* room for tab bar */
+  }
+
+  .card{
+    background:var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+  }
+  .h1{ font-size:22px; font-weight:700; margin:0 0 6px 0; }
+  .h2{ font-size:18px; font-weight:700; margin:0 0 10px 0; }
+  .muted{ color:var(--muted); }
+  .row{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .btn{
+    width:100%;
+    border:none;
+    background:var(--brand);
+    color:#fff;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size:16px;
+    font-weight:600;
+    touch-action: manipulation;
+  }
+  .btn.secondary{
+    background:#fff;
+    color:var(--brand);
+    border:1px solid var(--line);
+  }
+
+  /* receipts list */
+  .receipt{
+    padding: 12px 0;
+    border-bottom:1px solid var(--line);
+    touch-action: manipulation;
+  }
+  .receipt:last-child{ border-bottom:none; }
+  .receipt strong{ display:block; font-size:16px; }
+  .receipt .meta{ margin-top:2px; color:var(--muted); font-size:14px; }
+  .receipt .amount{ margin-top:6px; font-weight:700; font-size:16px; }
+  .receipt.tappable{ cursor:pointer; }
+
+  /* tab bar */
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:#fff;
+    border-top:1px solid var(--line);
+    display:flex;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom)) 6px;
+    z-index:20;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    font-size:12px;
+    color:var(--text);
+    padding: 8px 4px;
+    border-radius: 10px;
+    touch-action: manipulation;
+    user-select:none;
+  }
+  .tab.active{ color:var(--brand); font-weight:700; }
+
+  /* modal */
+  .modalOverlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.35);
+    display:none;
+    align-items:flex-end;
+    z-index:30;
+  }
+  .modal{
+    width:100%;
+    background:#fff;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.15);
+  }
+  .modal h3{ margin:0 0 8px 0; font-size:18px; }
+  .modal p{ margin:0 0 10px 0; color:var(--muted); }
+  .modal .btn{ margin-top:8px; }
+
+  /* login */
+  .field{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding: 12px 12px;
+    font-size:16px;
+    background:#fff;
+    outline:none;
+  }
+  .divider{ height:1px; background:var(--line); margin:12px 0; }
+
+  .hidden{ display:none; }
 </style>
 </head>
 
 <body>
+  <div class="nav" id="navTitle">Safeway</div>
 
-<div class="navbar">Safeway</div>
-
-<div class="screen" id="home">
-  <div class="card">
-    <div class="title">Welcome back</div>
-    <div class="small">Plaza Safeway – Walla Walla, WA</div>
+  <div class="subnav" id="subnav">
+    <div class="pill"><strong>Store:</strong> Plaza Safeway – Walla Walla, WA</div>
+    <div class="pill" id="trainingPill" style="display:none;"><strong>Training:</strong> ON</div>
   </div>
-</div>
 
-<div class="screen hidden" id="receipts">
-  <div class="card">
-    <div class="title">Purchase History</div>
+  <div class="container">
 
-    <div class="receipt" onclick="showDetail('instore')">
-      <strong>Safeway #0115</strong><br>
-      Jan 12, 2026 · In-Store<br>
-      <span class="small">Receipt not available</span>
-    </div>
+    <!-- LOGIN -->
+    <section id="screen-login" class="card">
+      <div class="h1">Sign in</div>
+      <div class="muted" style="margin-bottom:12px;">Training-only mock. No real Safeway account required.</div>
+      <input class="field" id="loginField" placeholder="Phone number or email" inputmode="email" />
+      <div class="divider"></div>
+      <button class="btn" id="btnSendCode">Send verification code</button>
+      <button class="btn secondary" id="btnSkipLogin" style="margin-top:10px;">Skip (Manager training)</button>
+      <div class="muted" style="margin-top:10px; font-size:13px;">
+        Tip: “Receipts missing” is often just a customer being logged out or in the wrong account.
+      </div>
+    </section>
 
-    <div class="receipt" onclick="showDetail('scanpay')">
-      <strong>Safeway #0115</strong><br>
-      Jan 10, 2026 · Scan & Pay<br>
-      <span class="small">$84.71</span>
-    </div>
+    <!-- HOME -->
+    <section id="screen-home" class="hidden">
+      <div class="card">
+        <div class="h1">Welcome back</div>
+        <div class="muted">Plaza Safeway – Walla Walla, WA</div>
+      </div>
 
-    <div class="receipt" onclick="showDetail('pickup')">
-      <strong>DriveUp & Go</strong><br>
-      Jan 9, 2026 · Pickup<br>
-      <span class="small">$63.19</span>
-    </div>
+      <div class="card">
+        <div class="h2">Quick training scenarios</div>
+        <button class="btn" id="btnScenarioNoReceipt">Customer can’t find receipt</button>
+        <button class="btn secondary" id="btnScenarioPickup" style="margin-top:10px;">Pickup order receipt</button>
+        <button class="btn secondary" id="btnScenarioScanPay" style="margin-top:10px;">Scan & Pay receipt</button>
+      </div>
+    </section>
 
-    <div class="receipt" onclick="showDetail('fuel')">
-      <strong>Safeway Fuel</strong><br>
-      Jan 7, 2026<br>
-      <span class="small">$47.88</span>
+    <!-- FOR U -->
+    <section id="screen-foru" class="hidden">
+      <div class="card">
+        <div class="h1">For U</div>
+        <div class="muted">Deals & rewards (training view)</div>
+        <div class="divider"></div>
+        <div class="muted">Employee coaching point:</div>
+        <div style="margin-top:6px;">“If the customer isn’t signed into the right account, their rewards + receipts won’t match.”</div>
+      </div>
+    </section>
+
+    <!-- WALLET -->
+    <section id="screen-wallet" class="hidden">
+      <div class="card">
+        <div class="h1">Wallet</div>
+        <div class="muted">Scan & Pay / payment methods (training view)</div>
+        <div class="divider"></div>
+
+        <div class="row">
+          <div>
+            <div style="font-weight:700;">Training toggles</div>
+            <div class="muted" style="font-size:13px;">These change what receipts show.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label><input type="checkbox" id="tScanPay" checked /> Scan & Pay used</label><br><br>
+          <label><input type="checkbox" id="tAppPay" checked /> Paid in app (wallet)</label><br><br>
+          <label><input type="checkbox" id="tCard" /> Paid with physical card at register</label><br><br>
+          <label><input type="checkbox" id="tCash" /> Paid with cash</label>
+        </div>
+
+        <div class="divider"></div>
+        <button class="btn" id="btnApplyToggles">Apply</button>
+
+        <div class="muted" style="margin-top:10px; font-size:13px;">
+          Coaching point: cash purchases don’t generate a digital receipt in the app.
+        </div>
+      </div>
+    </section>
+
+    <!-- RECEIPTS -->
+    <section id="screen-receipts" class="hidden">
+      <div class="card">
+        <div class="row">
+          <div class="h1" style="margin:0;">Purchase History</div>
+          <button class="btn secondary" id="btnWhyMissing" style="width:auto; padding:10px 12px; font-size:14px;">Why missing?</button>
+        </div>
+
+        <div id="receiptList" style="margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- MORE -->
+    <section id="screen-more" class="hidden">
+      <div class="card">
+        <div class="h1">More</div>
+        <div class="muted">Account & training controls</div>
+        <div class="divider"></div>
+
+        <button class="btn secondary" id="btnToggleTraining">Toggle Training Mode</button>
+        <button class="btn" id="btnQuiz" style="margin-top:10px;">Start 5-question quiz</button>
+
+        <div class="divider"></div>
+        <button class="btn secondary" id="btnLogout">Sign out</button>
+
+        <div class="muted" style="margin-top:10px; font-size:13px;">
+          Tip: If a customer says “my receipts disappeared,” first confirm they didn’t sign into a different email/phone.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tabbar" id="tabbar" style="display:none;">
+    <div class="tab active" data-tab="home">Home</div>
+    <div class="tab" data-tab="foru">For U</div>
+    <div class="tab" data-tab="wallet">Wallet</div>
+    <div class="tab" data-tab="receipts">Receipts</div>
+    <div class="tab" data-tab="more">More</div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modalOverlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <h3 id="modalTitle">Title</h3>
+      <p id="modalBody">Body</p>
+      <button class="btn secondary" id="modalClose">Close</button>
     </div>
   </div>
-</div>
-
-<div class="screen hidden" id="detail">
-  <div class="card" id="detailContent"></div>
-  <button onclick="goBack()">Back to Receipts</button>
-</div>
-
-<div class="tabbar">
-  <div class="tab active" onclick="switchTab('home')">Home</div>
-  <div class="tab">For U</div>
-  <div class="tab">Wallet</div>
-  <div class="tab" onclick="switchTab('receipts')">Receipts</div>
-  <div class="tab">More</div>
-</div>
 
 <script>
-function switchTab(tab) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById(tab).classList.remove('hidden');
-}
-
-function showDetail(type) {
-  switchTab('detail');
-  let content = document.getElementById('detailContent');
-
-  if (type === 'instore') {
-    content.innerHTML = `
-      <strong>No Digital Receipt</strong><br><br>
-      <span class="small">
-      This purchase was made in-store without Scan & Pay or app payment.<br><br>
-      Paper receipt only.
-      </span>`;
+(function(){
+  // Reliable tap handling on iOS (click + touchend)
+  function onTap(el, fn){
+    el.addEventListener('click', fn, {passive:true});
+    el.addEventListener('touchend', function(e){ fn(e); }, {passive:true});
   }
 
-  if (type === 'scanpay') {
-    content.innerHTML = `
-      <strong>Safeway #0115</strong><br>
-      Jan 10, 2026 · 4:22 PM<br><br>
-      Milk $3.99<br>
-      Chicken $12.88<br>
-      Produce $18.20<br><br>
-      <strong>Total $84.71</strong><br>
-      <span class="small">Paid with Safeway Wallet</span>`;
+  const screens = {
+    login: document.getElementById('screen-login'),
+    home: document.getElementById('screen-home'),
+    foru: document.getElementById('screen-foru'),
+    wallet: document.getElementById('screen-wallet'),
+    receipts: document.getElementById('screen-receipts'),
+    more: document.getElementById('screen-more'),
+  };
+
+  const tabbar = document.getElementById('tabbar');
+  const navTitle = document.getElementById('navTitle');
+  const trainingPill = document.getElementById('trainingPill');
+
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalClose = document.getElementById('modalClose');
+
+  let state = {
+    signedIn: false,
+    trainingMode: false,
+    toggles: { scanPay:true, appPay:true, card:false, cash:false }
+  };
+
+  function showModal(title, body){
+    modalTitle.textContent = title;
+    modalBody.textContent = body;
+    modalOverlay.style.display = 'flex';
+  }
+  onTap(modalClose, ()=>{ modalOverlay.style.display='none'; });
+  modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) modalOverlay.style.display='none'; });
+
+  function setActiveTab(tab){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    const t = document.querySelector(`.tab[data-tab="${tab}"]`);
+    if(t) t.classList.add('active');
   }
 
-  if (type === 'pickup') {
-    content.innerHTML = `
-      <strong>DriveUp & Go</strong><br>
-      Jan 9, 2026<br><br>
-      Pickup Order<br>
-      <strong>Total $63.19</strong>`;
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.add('hidden'));
+    screens[name].classList.remove('hidden');
+
+    // title like iOS
+    if(name === 'home') navTitle.textContent = 'Safeway';
+    if(name === 'foru') navTitle.textContent = 'For U';
+    if(name === 'wallet') navTitle.textContent = 'Wallet';
+    if(name === 'receipts') navTitle.textContent = 'Safeway';
+    if(name === 'more') navTitle.textContent = 'More';
+
+    if(name !== 'login') setActiveTab(name);
   }
 
-  if (type === 'fuel') {
-    content.innerHTML = `
-      <strong>Safeway Fuel</strong><br>
-      Jan 7, 2026<br><br>
-      12.4 gal @ $3.86<br>
-      <strong>Total $47.88</strong>`;
+  function enterApp(){
+    state.signedIn = true;
+    tabbar.style.display = 'flex';
+    showScreen('home');
   }
-}
 
-function goBack() {
-  switchTab('receipts');
-}
+  // LOGIN
+  onTap(document.getElementById('btnSendCode'), ()=>{
+    const v = (document.getElementById('loginField').value || '').trim();
+    showModal('Verification code sent', v ? `Training: code sent to ${v}` : 'Training: code sent');
+    enterApp();
+  });
+  onTap(document.getElementById('btnSkipLogin'), ()=>{
+    showModal('Manager training', 'Signed in (training-only).');
+    enterApp();
+  });
+
+  // TAB BAR NAV
+  document.querySelectorAll('.tab').forEach(tab=>{
+    onTap(tab, ()=>{
+      const dest = tab.getAttribute('data-tab');
+      if(dest) showScreen(dest);
+      if(dest === 'receipts') renderReceipts();
+    });
+  });
+
+  // RECEIPTS RENDERING
+  function renderReceipts(){
+    const list = document.getElementById('receiptList');
+    list.innerHTML = '';
+
+    // Logic: pickup/delivery always show (we keep one), scanpay shows if toggled, app pay shows if toggled.
+    // In-store card/cash often doesn't show: we show "not available" if card or cash is on.
+    const items = [];
+
+    // In-store: show not available if card or cash toggled, otherwise still not available to train expectation.
+    const inStoreNotAvailable = (state.toggles.card || state.toggles.cash || true);
+    items.push({
+      title: 'Safeway #0115',
+      meta: 'Jan 12, 2026 · In-Store',
+      amount: inStoreNotAvailable ? 'Receipt not available' : '$42.18',
+      type: 'instore'
+    });
+
+    if(state.toggles.scanPay){
+      items.push({
+        title: 'Safeway #0115',
+        meta: 'Jan 10, 2026 · Scan & Pay',
+        amount: '$84.71',
+        type: 'scanpay'
+      });
+    }
+
+    // Pickup always
+    items.push({
+      title: 'DriveUp & Go',
+      meta: 'Jan 9, 2026 · Pickup',
+      amount: '$63.19',
+      type: 'pickup'
+    });
+
+    // Fuel example
+    items.push({
+      title: 'Safeway Fuel',
+      meta: 'Jan 7, 2026',
+      amount: '$47.88',
+      type: 'fuel'
+    });
+
+    items.forEach(r=>{
+      const div = document.createElement('div');
+      div.className = 'receipt tappable';
+      div.innerHTML = `
+        <strong>${r.title}</strong>
+        <div class="meta">${r.meta}</div>
+        <div class="amount">${r.amount}</div>
+      `;
+      onTap(div, ()=>{
+        if(r.type === 'instore'){
+          showModal('No digital receipt', 'Training: This was an in-store purchase without Scan & Pay/app payment. Cash and many register card payments do not generate a digital receipt in the app.');
+          return;
+        }
+        if(r.type === 'scanpay'){
+          showModal('Receipt details', 'Safeway #0115\nJan 10, 2026 · 4:22 PM\n\nMilk 3.99\nChicken 12.88\nProduce 18.20\n\nTotal 84.71\nPaid with Wallet (training)');
+          return;
+        }
+        if(r.type === 'pickup'){
+          showModal('Pickup receipt', 'DriveUp & Go\nJan 9, 2026\n\nPickup orders always have a digital receipt in the app (training).');
+          return;
+        }
+        if(r.type === 'fuel'){
+          showModal('Fuel receipt', 'Safeway Fuel\nJan 7, 2026\n\n12.4 gal @ 3.86\nTotal 47.88');
+        }
+      });
+      list.appendChild(div);
+    });
+  }
+
+  // WHY MISSING?
+  onTap(document.getElementById('btnWhyMissing'), ()=>{
+    showModal('Why a receipt may be missing', 'Training talking points:\n\n• Customer is logged out or in a different account.\n• In-store card/cash purchases may not generate a digital receipt.\n• Scan & Pay / app wallet purchases generate digital receipts.\n• Pickup & delivery receipts appear in order history.');
+  });
+
+  // WALLET toggles
+  const tScanPay = document.getElementById('tScanPay');
+  const tAppPay = document.getElementById('tAppPay');
+  const tCard = document.getElementById('tCard');
+  const tCash = document.getElementById('tCash');
+
+  onTap(document.getElementById('btnApplyToggles'), ()=>{
+    state.toggles.scanPay = !!tScanPay.checked;
+    state.toggles.appPay = !!tAppPay.checked;
+    state.toggles.card = !!tCard.checked;
+    state.toggles.cash = !!tCash.checked;
+
+    showModal('Applied', 'Training: receipt availability updated.');
+  });
+
+  // Scenarios
+  onTap(document.getElementById('btnScenarioNoReceipt'), ()=>{
+    showScreen('receipts');
+    renderReceipts();
+    showModal('Scenario', 'Customer says: “I can’t find my receipt in the app.”\n\nAsk: “Did you use Scan & Pay or pay through the app?”');
+  });
+  onTap(document.getElementById('btnScenarioPickup'), ()=>{
+    showScreen('receipts');
+    renderReceipts();
+    showModal('Scenario', 'Customer says: “My pickup order receipt?”\n\nPath: Receipts → Purchase History (or Orders in real app). Pickup/delivery receipts are available digitally.');
+  });
+  onTap(document.getElementById('btnScenarioScanPay'), ()=>{
+    showScreen('receipts');
+    renderReceipts();
+    showModal('Scenario', 'Customer says: “I used Scan & Pay—where’s my receipt?”\n\nPath: Receipts → Purchase History → tap receipt.');
+  });
+
+  // Training mode
+  onTap(document.getElementById('btnToggleTraining'), ()=>{
+    state.trainingMode = !state.trainingMode;
+    trainingPill.style.display = state.trainingMode ? 'block' : 'none';
+    showModal('Training Mode', state.trainingMode ? 'ON (manager view enabled)' : 'OFF');
+  });
+
+  // Quiz (simple)
+  onTap(document.getElementById('btnQuiz'), ()=>{
+    showModal('Quiz (quick)', 'Q1: Customer paid cash in-store. Will a digital receipt always appear?\n\nAnswer: No.');
+  });
+
+  // Logout
+  onTap(document.getElementById('btnLogout'), ()=>{
+    state.signedIn = false;
+    tabbar.style.display = 'none';
+    trainingPill.style.display = 'none';
+    showScreen('login');
+  });
+
+  // Start state
+  showScreen('login');
+})();
 </script>
-
 </body>
 </html>
